@@ -15,7 +15,7 @@ from xautodl.models.cell_operations import NAS_BENCH_201
 from xautodl.models.cell_operations import OPS as OPS_TORCH
 
 from maple.conversion import converter
-from maple.conversion import converter_configs as conv_cfgs
+from maple.conversion import converter_configs as cc
 from maple.utils import utils
 
 """
@@ -156,14 +156,14 @@ def convert_nats_ops_to_onnx(out_dir, input_shape):
             # Assume op depth = 1
             opnet = get_ops_network(op_name, inC, outC)
             op_key = utils.get_op_key(op_name, w, reduction, outC)
-            file_cfg_onnx = conv_cfgs.OPS_FILE_CONFIGS['onnx']
+            file_cfg_onnx = cc.OPS_FILE_CONFIGS['onnx']
             model_out_path = utils.generate_model_ops_out_path(
                 out_dir=out_dir,
                 dirname=file_cfg_onnx.dirname,
                 model_uid=op_key,
                 extension=file_cfg_onnx.extension)
 
-            file_cfg_onnx_simp = conv_cfgs.OPS_FILE_CONFIGS['onnx-simplified']
+            file_cfg_onnx_simp = cc.OPS_FILE_CONFIGS['onnx-simplified']
             simplified_model_out_path = utils.generate_model_ops_out_path(
                 out_dir=out_dir,
                 dirname=file_cfg_onnx_simp.dirname,
@@ -280,7 +280,7 @@ def convert_nats_backbone_to_onnx(out_dir, input_shape):
         backbone_block_input = backbone.get_input(block_name)
 
         # Generate path for saving ONNX model.
-        file_cfg_onnx = conv_cfgs.OPS_FILE_CONFIGS['onnx']
+        file_cfg_onnx = cc.OPS_FILE_CONFIGS['onnx']
         model_out_path = utils.generate_model_ops_out_path(
             out_dir=out_dir,
             dirname=file_cfg_onnx.dirname,
@@ -288,7 +288,7 @@ def convert_nats_backbone_to_onnx(out_dir, input_shape):
             extension=file_cfg_onnx.extension)
 
         # Generate path for saving simplified ONNX model.
-        file_cfg_onnx_simp = conv_cfgs.OPS_FILE_CONFIGS['onnx-simplified']
+        file_cfg_onnx_simp = cc.OPS_FILE_CONFIGS['onnx-simplified']
         simplified_model_out_path = utils.generate_model_ops_out_path(
             out_dir=out_dir,
             dirname=file_cfg_onnx_simp.dirname,
@@ -326,7 +326,7 @@ def get_ops_network(op_name, C_in, C_out):
     return OPS_TORCH[op_name](C_in, C_out, 1, True, True)
 
 
-def convert_nats_to_onnx(export_config: conv_cfgs.ExportConfig):
+def convert_nats_to_onnx(export_config: cc.ExportConfig):
     """Converts cells in NATS-Bench-201 to ONNX and saves them to disk.
 
     Args:
@@ -343,20 +343,24 @@ def convert_nats_to_onnx(export_config: conv_cfgs.ExportConfig):
 
     net = get_torch_network(cell_config, export_config.channels_last)
 
+    model_uid = utils.generate_model_uid(
+        input_size=export_config.input_shape[0],
+        arch_idx=export_config.arch_idx)
+
     # Generate path for saving ONNX model.
-    file_cfg_onnx = conv_cfgs.CELL_FILE_CONFIGS['onnx']
+    file_cfg_onnx = cc.CELL_FILE_CONFIGS['onnx']
     model_out_path = utils.generate_model_out_path(
                         out_dir=export_config.out_dir,
                         dirname=file_cfg_onnx.dirname,
-                        model_uid=export_config.arch_idx,
+                        model_uid=model_uid,
                         extension=file_cfg_onnx.extension)
 
     # Generate path for saving simplified ONNX model.
-    file_cfg_onnx_simp = conv_cfgs.CELL_FILE_CONFIGS['onnx-simplified']
+    file_cfg_onnx_simp = cc.CELL_FILE_CONFIGS['onnx-simplified']
     simplified_model_out_path = utils.generate_model_out_path(
                                     out_dir=export_config.out_dir,
                                     dirname=file_cfg_onnx_simp.dirname,
-                                    model_uid=export_config.arch_idx,
+                                    model_uid=model_uid,
                                     extension=file_cfg_onnx_simp.extension)
 
     # Convert to ONNX and save.
@@ -402,8 +406,8 @@ if __name__ == "__main__":
         "--seed", default=27, dest="seed",
         help="Seed value for random generator.")
     parser.add_argument(
-        "--input_shape", default=conv_cfgs.INPUT_SIZE,
-        dest="input_shape", help="Input size for models.")
+        "--input_size", default=cc.DEFAULT_INPUT_SIZE,
+        dest="input_size", help="Input size for models.")
     parser.add_argument(
         "--export_dir",
         default="/home/saeejith/work/nas/maple-data/models",
@@ -415,7 +419,7 @@ if __name__ == "__main__":
         dest="nats_dir",
         help="Path to directory containing NATS-tss-v1_0-3ffb9-simple dataset")
     parser.add_argument(
-        "--range", nargs=2, default=[0, 15625], dest="range", type=(int),
+        "--range", nargs=2, default=[15620, 15625], dest="range", type=(int),
         help="Range of architectures to export")
     parser.add_argument(
         '--convert_ops', dest='convert_ops', action='store_true')
@@ -423,17 +427,11 @@ if __name__ == "__main__":
         '--convert_backbone', dest='convert_backbone', action='store_true')
 
     args = parser.parse_args()
-    assert(len(args.range) == 2)
+    assert (len(args.range) == 2)
 
-    # TODO(snair): Make input shape dynamic.
-    if args.input_shape != conv_cfgs.INPUT_SIZE:
-        # Input shape must be fixed to this for compatibility with previously
-        # collected data.
-        raise ValueError(f"Input shape must be "
-                         f"{(conv_cfgs.INPUT_SIZE,conv_cfgs.INPUT_SIZE)}. "
-                         f"Received ({args.input_shape},{args.input_shape})")
-
-    input_shape = (args.input_shape, args.input_shape)
+    # Input shape for the network must be square.
+    input_size = int(args.input_size)
+    input_shape = (input_size, input_size)
 
     utils.setup_seed(args.seed, envs=['torch'])
 

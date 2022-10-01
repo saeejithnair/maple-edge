@@ -9,8 +9,9 @@ from xautodl import config_utils
 from xautodl.models.cell_operations import NAS_BENCH_201
 
 from maple.conversion import converter
+from maple.conversion import converter_configs as cc
 from maple.conversion.converter_configs import (CELL_FILE_CONFIGS,
-                                                INPUT_SIZE, OPS_FILE_CONFIGS)
+                                                OPS_FILE_CONFIGS)
 from maple.utils import utils
 
 from maple.cells.tiny_network_keras import TinyNetwork as TinyNetworkKeras
@@ -329,7 +330,7 @@ if __name__ == "__main__":
         "--seed", default=27, dest="seed",
         help="Seed value for random generator.")
     parser.add_argument(
-        "--input_shape", default=INPUT_SIZE, dest="input_shape",
+        "--input_size", default=cc.DEFAULT_INPUT_SIZE, dest="input_size",
         help="Input size for models.")
     parser.add_argument(
         "--export_dir", default="/home/saeejith/work/nas/maple-data/models",
@@ -349,17 +350,11 @@ if __name__ == "__main__":
         '--convert_backbone', dest='convert_backbone', action='store_true')
 
     args = parser.parse_args()
-    assert(len(args.range) == 2)
+    assert (len(args.range) == 2)
 
-    if args.input_shape != INPUT_SIZE:
-        # TODO(snair): Make this dynamic to support different input sizes.
-        # Input shape must be fixed to this for compatibility with previously
-        # collected data.
-        raise ValueError(
-            f"Input shape must be (INPUT_SIZE,INPUT_SIZE). "
-            f"Received ({args.input_shape},{args.input_shape})")
-
-    input_shape = (args.input_shape, args.input_shape)
+    # Input shape for the network must be square.
+    input_size = int(args.input_size)
+    input_shape = (input_size, input_size)
 
     utils.setup_seed(args.seed, envs=['tf'])
 

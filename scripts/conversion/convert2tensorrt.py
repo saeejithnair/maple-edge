@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_models_to_convert', default=15625, dest='num_models_to_convert', type=(int), help="Number of models to convert")
 
     args = parser.parse_args()
-    assert(len(args.range) == 2)
+    assert (len(args.range) == 2)
 
     gen_utils.setup_seed(args.seed)
 

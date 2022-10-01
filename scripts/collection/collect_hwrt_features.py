@@ -1,10 +1,12 @@
-from maple.utils import nasbench201_utils
-from maple.collection.recorder_configs import LatencyRecorderConfig
-from maple.collection.latency_recorder_manager import LatencyRecorderManager
-
 import argparse
-import numpy as np
 from nats_bench import create
+import numpy as np
+
+from maple.utils import nasbench201_utils
+from maple.collection.recorder.recorder_configs import LatencyRecorderConfig
+from maple.collection.recorder.latency_recorder_manager import (
+    LatencyRecorderManager)
+
 
 def setup_parser():
     parser = argparse.ArgumentParser()

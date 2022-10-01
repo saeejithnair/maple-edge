@@ -40,6 +40,22 @@ def setup_seed(seed: int, envs: list[str] = []) -> None:
         tf.random.set_seed(npseed)
 
 
+def generate_model_uid(arch_idx, input_size):
+    """Generates a unique model id for a given model architecture.
+    E.g. for a 224x224 input shape and arch_idx 57, the model id is:
+    224_57.
+
+    Args:
+        arch_idx: Index of the model architecture in NATS-Bench-201.
+        input_size: Input dimension of the model (e.g. 224). Only accepts
+            a single integer since input shape is expected to be square.
+    """
+    if input_size is None:
+        input_size = cc.DEFAULT_INPUT_SIZE
+
+    return f"{input_size}_{arch_idx}"
+
+
 def generate_model_filename(model_uid, extension, prefix="nats_cell"):
     return f"{prefix}_{model_uid}.{extension}"
 
