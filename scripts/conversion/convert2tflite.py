@@ -189,18 +189,22 @@ def convert_nats_to_tflite(export_config):
     keras_net = get_keras_network(cell_config, input_size)
     keras_net.fit(dummy_input, dummy_target)
 
+    model_uid = utils.generate_model_uid(
+        input_size=export_config.input_shape[0],
+        arch_idx=export_config.arch_idx)
+
     # Generate path for saving Keras model.
     keras_model_out_path = utils.generate_model_out_path(
                             export_dir=export_config.export_dir,
                             dirname=CELL_FILE_CONFIGS['keras'].dirname,
-                            model_uid=export_config.arch_idx,
+                            model_uid=model_uid,
                             extension=CELL_FILE_CONFIGS['keras'].extension)
 
     # Generate path for saving Tensorflow Lite model.
     tflite_model_out_path = utils.generate_model_out_path(
                             export_dir=export_config.export_dir,
                             dirname=CELL_FILE_CONFIGS['tflite'].dirname,
-                            model_uid=export_config.arch_idx,
+                            model_uid=model_uid,
                             extension=CELL_FILE_CONFIGS['tflite'].extension)
 
     # Convert to TFLite and save.
@@ -209,7 +213,7 @@ def convert_nats_to_tflite(export_config):
                                 tflite_model_out_path, dummy_input)
     except Exception as e:
         print(f"Encountered exception while trying to convert "
-              f"architecture {export_config.arch_idx}")
+              f"architecture {model_uid}")
         # An error may have been raised in another worker process while this
         # process was in the middle of exporting a model. We don't want
         # corrupt files so delete any model that may not have been successfully

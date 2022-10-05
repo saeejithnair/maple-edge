@@ -369,7 +369,7 @@ def convert_nats_to_onnx(export_config: cc.ExportConfig):
                               simplified_model_out_path, dummy_input)
     except Exception as e:
         print(f"ERROR. Encountered exception while trying to convert "
-              f"architecture {export_config.arch_idx}")
+              f"architecture {model_uid}")
         print(e)
         sys.stdout.flush()
         # An error may have been raised in another worker process while this
