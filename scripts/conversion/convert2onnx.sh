@@ -12,7 +12,7 @@ DEFAULT_END="2700"
 END="${3:-$DEFAULT_END}"
 
 DEFAULT_MODEL_EXPORT_DIR="/home/saeejith/work/nas/maple-data/models"
-EXPORT_DIR="${DEFAULT_MODEL_EXPORT_DIR}/models_${INPUT_SIZE}"
+MODEL_EXPORT_DIR="${4:-$DEFAULT_MODEL_EXPORT_DIR}"
 
 INPUT_SIZES=(16 32 64 128 256 300 384 448 512)
 
@@ -27,7 +27,7 @@ while true; do
 
 	# Convert models for all input sizes.
 	for input_size in ${INPUT_SIZES[@]}; do
-		export_dir="${DEFAULT_MODEL_EXPORT_DIR}/models_${input_size}"
+		export_dir="${MODEL_EXPORT_DIR}/models_${input_size}"
 
 		echo "Running convert2onnx.py for range ($RANGE_START, $RANGE_END), input: $input_size"
 		python3 convert2onnx.py --range $RANGE_START $RANGE_END --input_size $input_size --export_dir $export_dir
@@ -38,7 +38,7 @@ done
 
 # Convert remaining models in specified range.
 for input_size in ${INPUT_SIZES[@]}; do
-	export_dir="${DEFAULT_MODEL_EXPORT_DIR}/models_${input_size}"
+	export_dir="${MODEL_EXPORT_DIR}/models_${input_size}"
 
 	echo "Running convert2onnx.py for range ($START, $END), input: $input_size"
 	python3 convert2onnx.py --range $START $END --input_size $input_size --export_dir $export_dir --convert_ops --convert_backbone

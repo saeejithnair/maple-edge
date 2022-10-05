@@ -191,14 +191,14 @@ def convert_nats_to_tflite(export_config):
 
     # Generate path for saving Keras model.
     keras_model_out_path = utils.generate_model_out_path(
-                            out_dir=export_config.out_dir,
+                            export_dir=export_config.export_dir,
                             dirname=CELL_FILE_CONFIGS['keras'].dirname,
                             model_uid=export_config.arch_idx,
                             extension=CELL_FILE_CONFIGS['keras'].extension)
 
     # Generate path for saving Tensorflow Lite model.
     tflite_model_out_path = utils.generate_model_out_path(
-                            out_dir=export_config.out_dir,
+                            export_dir=export_config.export_dir,
                             dirname=CELL_FILE_CONFIGS['tflite'].dirname,
                             model_uid=export_config.arch_idx,
                             extension=CELL_FILE_CONFIGS['tflite'].extension)
@@ -223,12 +223,12 @@ def convert_nats_to_tflite(export_config):
             os.remove(keras_model_out_path)
 
 
-def convert_nats_backbone_to_tflite(out_dir, input_shape):
+def convert_nats_backbone_to_tflite(export_dir, input_shape):
     """Converts the NATS-Bench-201 backbone to Tensorflow Lite
     and saves it to disk.
 
     Args:
-        out_dir: Directory to save the exported model.
+        export_dir: Directory to save the exported model.
         input_shape: Shape of the input to the network.
     """
     inC = 16
@@ -249,14 +249,14 @@ def convert_nats_backbone_to_tflite(out_dir, input_shape):
 
         # Generate path for saving Keras model.
         model_out_path = utils.generate_model_ops_out_path(
-                            out_dir=out_dir,
+                            export_dir=export_dir,
                             dirname=OPS_FILE_CONFIGS['keras'].dirname,
                             model_uid=block_name,
                             extension=OPS_FILE_CONFIGS['keras'].extension)
 
         # Generate path for saving Tensorflow Lite model.
         tflite_model_out_path = utils.generate_model_ops_out_path(
-                            out_dir=out_dir,
+                            export_dir=export_dir,
                             dirname=OPS_FILE_CONFIGS['tflite'].dirname,
                             model_uid=block_name,
                             extension=OPS_FILE_CONFIGS['tflite'].extension)
@@ -266,11 +266,11 @@ def convert_nats_backbone_to_tflite(out_dir, input_shape):
                                 tflite_model_out_path, dummy_input)
 
 
-def convert_nats_ops_to_tflite(out_dir, net_input_shape):
+def convert_nats_ops_to_tflite(export_dir, net_input_shape):
     """Converts the NATS-Bench-201 ops to Tensorflow Lite.
 
     Args:
-        out_dir: Directory to save the exported model.
+        export_dir: Directory to save the exported model.
         net_input_shape: Shape of the input to the network.
     """
     print('Converting NATS ops to TfLite')
@@ -290,14 +290,14 @@ def convert_nats_ops_to_tflite(out_dir, net_input_shape):
 
             # Generate path for saving Keras model.
             model_out_path = utils.generate_model_ops_out_path(
-                            out_dir=out_dir,
+                            export_dir=export_dir,
                             dirname=OPS_FILE_CONFIGS['keras'].dirname,
                             model_uid=op_key,
                             extension=OPS_FILE_CONFIGS['keras'].extension)
 
             # Generate path for saving Tensorflow Lite model.
             tflite_model_out_path = utils.generate_model_ops_out_path(
-                            out_dir=out_dir,
+                            export_dir=export_dir,
                             dirname=OPS_FILE_CONFIGS['tflite'].dirname,
                             model_uid=op_key,
                             extension=OPS_FILE_CONFIGS['tflite'].extension)
@@ -307,20 +307,20 @@ def convert_nats_ops_to_tflite(out_dir, net_input_shape):
                                     tflite_model_out_path, dummy_input)
 
 
-def convert_nats_to_tflite_parallel(api, out_dir, arch_idx_range, input_shape,
+def convert_nats_to_tflite_parallel(api, export_dir, arch_idx_range, input_shape,
                                     channels_last=False):
     """Converts NATS network from Keras to Tensorflow Lite. in parallel
     using multiprocessing.
 
     Args:
         api: NATS-Bench-201 API.
-        out_dir: Directory to save the exported model.
+        export_dir: Directory to save the exported model.
         arch_idx_range: Range of architectures to export.
         input_shape: Shape of the input to the network.
         channels_last: Whether to use channels last format.
     """
     converter.export_nats_parallel(
-                api, convert_nats_to_tflite, out_dir, arch_idx_range,
+                api, convert_nats_to_tflite, export_dir, arch_idx_range,
                 input_shape, model_type='tflite', channels_last=channels_last)
 
 
@@ -357,6 +357,10 @@ if __name__ == "__main__":
     input_shape = (input_size, input_size)
 
     utils.setup_seed(args.seed, envs=['tf'])
+
+    # Create output directory if it doesn't exist.
+    utils.create_outdirs(args.export_dir, 'keras')
+    utils.create_outdirs(args.export_dir, 'tflite')
 
     # Create NATS-Bench API
     api = create(args.nats_dir, 'tss', fast_mode=True, verbose=False)
