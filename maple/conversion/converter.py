@@ -10,8 +10,8 @@ from maple.utils import utils
 
 def filter_generated_models(glob_path, arch_idx_range, input_shape,
                             regex_arch_uid_match_expr):
-    """Parses models already exported to the converted_models_dir output dir and
-    filters them from range of arch indices to generate models from.
+    """Parses models already exported to the converted_models_dir output dir
+    and filters them from range of arch indices to generate models from.
 
     This ensures that we don't waste processing time converting models that
     have already been converted (helpful in the event of a previous crash.)
@@ -48,8 +48,8 @@ def filter_generated_models(glob_path, arch_idx_range, input_shape,
     # resulting in the default input size being used to generate the model uid.
     r = re.compile(regex_arch_uid_match_expr)
     exported_uids = set([utils.generate_model_uid(
-                            arch_idx=int(m.group(2)),
-                            input_size=int(m.group(1))) for m in
+                            arch_idx=m.group(2),
+                            input_size=m.group(1)) for m in
                         (r.match(filename) for filename in converted_files)
                         if m])
 
