@@ -2,6 +2,7 @@
 import random
 import numpy as np
 import os
+from pathlib import Path
 from maple.conversion import converter_configs as cc
 from maple.conversion.converter_configs import NATS_CELL_CONFIG
 from maple.utils import nasbench201_utils
@@ -56,25 +57,32 @@ def generate_model_uid(arch_idx, input_size):
     return f"{input_size}_{arch_idx}"
 
 
+def generate_model_outdir(export_dir, dirname):
+    return f"{export_dir}/{dirname}"
+
+
 def generate_model_filename(model_uid, extension, prefix="nats_cell"):
     return f"{prefix}_{model_uid}.{extension}"
 
 
-def generate_model_out_path(out_dir, dirname, model_uid, extension):
+def generate_model_out_path(export_dir, dirname, model_uid, extension):
     filename = generate_model_filename(model_uid, extension)
-    return f"{out_dir}/{dirname}/{filename}"
+    outdir = generate_model_outdir(export_dir, dirname)
+    return f"{outdir}/{filename}"
 
 
-def generate_model_arch_out_path(out_dir, dirname, model_uid, extension):
+def generate_model_arch_out_path(export_dir, dirname, model_uid, extension):
     filename = generate_model_filename(model_uid, extension, 
                                        prefix=cc.CELL_FILE_PREFIX)
-    return f"{out_dir}/{dirname}/{filename}"
+    outdir = generate_model_outdir(export_dir, dirname)
+    return f"{outdir}/{filename}"
 
 
-def generate_model_ops_out_path(out_dir, dirname, model_uid, extension):
+def generate_model_ops_out_path(export_dir, dirname, model_uid, extension):
     filename = generate_model_filename(model_uid, extension, 
                                        prefix=cc.OPS_FILE_PREFIX)
-    return f"{out_dir}/{dirname}/{filename}"
+    outdir = generate_model_outdir(export_dir, dirname)
+    return f"{outdir}/{filename}"
 
 
 def get_op_key(op_name, w, reduction, outC):
@@ -95,3 +103,26 @@ def generate_op_keys_dict(width):
 def generate_backbone_ops_list():
     # Expected stages in backbone model.
     return ['stem', 'resblock1', 'resblock2', 'pool', 'lastact', 'classifier']
+
+
+def ensure_dir_exists(path_to_dir):
+    """Ensures that the given directory exists. If not, creates it."""
+    Path(path_to_dir).mkdir(parents=True, exist_ok=True)
+
+
+def create_outdirs(export_dir: str, model_type: str) -> None:
+    """Creates output directories for the given model type.
+
+    Args:
+        export_dir: Root directory to export the model to.
+        model_type: Type of model to export (onnx, onnx-simplified, tflite).
+    """
+
+    cell_dirname = cc.CELL_FILE_CONFIGS[model_type].dirname
+    cell_outdir = generate_model_outdir(export_dir, cell_dirname)
+
+    ops_dirname = cc.OPS_FILE_CONFIGS[model_type].dirname
+    ops_outdir = generate_model_outdir(export_dir, ops_dirname)
+
+    ensure_dir_exists(cell_outdir)
+    ensure_dir_exists(ops_outdir)

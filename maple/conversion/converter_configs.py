@@ -6,7 +6,7 @@ from collections import namedtuple
 #   (e.g. get_net_cfg(arch_idx, 'cifar10')).
 ExportConfig = namedtuple(
     'ExportConfig',
-    'cell_config_dict arch_idx out_dir input_shape channels_last')
+    'cell_config_dict arch_idx export_dir input_shape channels_last')
 
 # Stores the extension and the regex match string used for parsing the unique
 # identifier for each model (associated with architecture index.)

@@ -137,12 +137,12 @@ def convert_torch_to_onnx(net, model_out_path, simplified_model_out_path,
     sys.stdout.flush()
 
 
-def convert_nats_ops_to_onnx(out_dir, input_shape):
+def convert_nats_ops_to_onnx(export_dir, input_shape):
     """Converts the NATS-Bench-201 operations to ONNX-simplified and
     saves them to disk.
 
     Args:
-        out_dir: Directory to save ONNX models to
+        export_dir: Directory to save ONNX models to
         input_shape: Shape of input to use for validation
     """
     print('Converting NATS ops to onnx-simplified')
@@ -158,14 +158,14 @@ def convert_nats_ops_to_onnx(out_dir, input_shape):
             op_key = utils.get_op_key(op_name, w, reduction, outC)
             file_cfg_onnx = cc.OPS_FILE_CONFIGS['onnx']
             model_out_path = utils.generate_model_ops_out_path(
-                out_dir=out_dir,
+                export_dir=export_dir,
                 dirname=file_cfg_onnx.dirname,
                 model_uid=op_key,
                 extension=file_cfg_onnx.extension)
 
             file_cfg_onnx_simp = cc.OPS_FILE_CONFIGS['onnx-simplified']
             simplified_model_out_path = utils.generate_model_ops_out_path(
-                out_dir=out_dir,
+                export_dir=export_dir,
                 dirname=file_cfg_onnx_simp.dirname,
                 model_uid=op_key,
                 extension=file_cfg_onnx_simp.extension)
@@ -258,12 +258,12 @@ class Backbone():
         return self.inputs[block_name]
 
 
-def convert_nats_backbone_to_onnx(out_dir, input_shape):
+def convert_nats_backbone_to_onnx(export_dir, input_shape):
     """Converts the NATS-Bench-201 backbone to ONNX-simplified and
     saves it to disk.
 
     Args:
-        out_dir: Directory to save ONNX models to
+        export_dir: Directory to save ONNX models to
         input_shape: Shape of input to use for validation
     """
     inC = 16
@@ -282,7 +282,7 @@ def convert_nats_backbone_to_onnx(out_dir, input_shape):
         # Generate path for saving ONNX model.
         file_cfg_onnx = cc.OPS_FILE_CONFIGS['onnx']
         model_out_path = utils.generate_model_ops_out_path(
-            out_dir=out_dir,
+            export_dir=export_dir,
             dirname=file_cfg_onnx.dirname,
             model_uid=block_name,
             extension=file_cfg_onnx.extension)
@@ -290,7 +290,7 @@ def convert_nats_backbone_to_onnx(out_dir, input_shape):
         # Generate path for saving simplified ONNX model.
         file_cfg_onnx_simp = cc.OPS_FILE_CONFIGS['onnx-simplified']
         simplified_model_out_path = utils.generate_model_ops_out_path(
-            out_dir=out_dir,
+            export_dir=export_dir,
             dirname=file_cfg_onnx_simp.dirname,
             model_uid=block_name,
             extension=file_cfg_onnx_simp.extension)
@@ -350,7 +350,7 @@ def convert_nats_to_onnx(export_config: cc.ExportConfig):
     # Generate path for saving ONNX model.
     file_cfg_onnx = cc.CELL_FILE_CONFIGS['onnx']
     model_out_path = utils.generate_model_out_path(
-                        out_dir=export_config.out_dir,
+                        export_dir=export_config.export_dir,
                         dirname=file_cfg_onnx.dirname,
                         model_uid=model_uid,
                         extension=file_cfg_onnx.extension)
@@ -358,7 +358,7 @@ def convert_nats_to_onnx(export_config: cc.ExportConfig):
     # Generate path for saving simplified ONNX model.
     file_cfg_onnx_simp = cc.CELL_FILE_CONFIGS['onnx-simplified']
     simplified_model_out_path = utils.generate_model_out_path(
-                                    out_dir=export_config.out_dir,
+                                    export_dir=export_config.export_dir,
                                     dirname=file_cfg_onnx_simp.dirname,
                                     model_uid=model_uid,
                                     extension=file_cfg_onnx_simp.extension)
@@ -382,19 +382,19 @@ def convert_nats_to_onnx(export_config: cc.ExportConfig):
             os.remove(model_out_path)
 
 
-def convert_nats_to_onnx_parallel(api, out_dir, arch_idx_range, input_shape,
+def convert_nats_to_onnx_parallel(api, export_dir, arch_idx_range, input_shape,
                                   channels_last=False):
     """Convert NATS network from Pytorch to Simplified ONNX in parallel using
     multiprocessing.
 
     Args:
         api: NATS-Bench-201 API
-        out_dir: Directory to save ONNX models to
+        export_dir: Directory to save ONNX models to
         arch_idx_range: Range of architecture indices to convert
         input_shape: Shape of input to use for validation
         channels_last: Whether to use channels last memory format
     """
-    converter.export_nats_parallel(api, convert_nats_to_onnx, out_dir,
+    converter.export_nats_parallel(api, convert_nats_to_onnx, export_dir,
                                    arch_idx_range, input_shape,
                                    model_type='onnx-simplified',
                                    channels_last=channels_last)
@@ -419,7 +419,7 @@ if __name__ == "__main__":
         dest="nats_dir",
         help="Path to directory containing NATS-tss-v1_0-3ffb9-simple dataset")
     parser.add_argument(
-        "--range", nargs=2, default=[15620, 15625], dest="range", type=(int),
+        "--range", nargs=2, default=[0, 15625], dest="range", type=(int),
         help="Range of architectures to export")
     parser.add_argument(
         '--convert_ops', dest='convert_ops', action='store_true')
@@ -434,6 +434,10 @@ if __name__ == "__main__":
     input_shape = (input_size, input_size)
 
     utils.setup_seed(args.seed, envs=['torch'])
+
+    # Create output directory if it doesn't exist.
+    utils.create_outdirs(args.export_dir, 'onnx')
+    utils.create_outdirs(args.export_dir, 'onnx-simplified')
 
     # Create NATS-Bench API
     api = create(args.nats_dir, 'tss', fast_mode=True, verbose=False)

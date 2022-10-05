@@ -61,14 +61,15 @@ def filter_generated_models(glob_path, arch_idx_range, input_shape,
     return remaining_idxs
 
 
-def generate_configs(api, arch_idx_range, out_dir, model_type, input_shape,
+def generate_configs(api, arch_idx_range, export_dir, model_type, input_shape,
                      channels_last):
     """Generates configs for all cell candidate architectures in dataset."""
     export_cfgs = []
 
     # Get file extension
     file_cfg = cc.CELL_FILE_CONFIGS[model_type]
-    converted_models_dir = f'{out_dir}/{file_cfg.dirname}'
+    converted_models_dir = utils.generate_model_outdir(export_dir,
+                                                       file_cfg.dirname)
     converted_models_glob_path = f"{converted_models_dir}/" \
         "*{file_cfg.extension}"
 
@@ -89,7 +90,7 @@ def generate_configs(api, arch_idx_range, out_dir, model_type, input_shape,
         export_cfg = cc.ExportConfig(
                         cell_config_dict=cfg_dict,
                         arch_idx=i,
-                        out_dir=out_dir,
+                        export_dir=export_dir,
                         input_shape=input_shape,
                         channels_last=channels_last)
 
@@ -118,7 +119,7 @@ def to_numpy(tensor):
         return tensor.cpu().numpy()
 
 
-def export_nats_parallel(api, conversion_fn, out_dir, arch_idx_range,
+def export_nats_parallel(api, conversion_fn, export_dir, arch_idx_range,
                          input_shape, model_type, channels_last=False):
     """Exports NATS models in parallel using multiprocessing.
 
@@ -126,14 +127,14 @@ def export_nats_parallel(api, conversion_fn, out_dir, arch_idx_range,
         api: API object for accessing NATS dataset.
         conversion_fn: Function to convert model to desired format. (e.g.
             convert_nats_to_onnx() or convert_nats_to_tflite()).
-        out_dir: Output directory to export models to.
+        export_dir: Output directory to export models to.
         arch_idx_range: Range of architecture indices to export models from.
         input_shape: Input shape for model.
         model_type: Type of model to export. (e.g. 'onnx' or 'tflite').
         channels_last: Whether to export model with channels last format.
     """
     # Generate configs for model type.
-    export_cfgs = generate_configs(api, arch_idx_range, out_dir, model_type,
+    export_cfgs = generate_configs(api, arch_idx_range, export_dir, model_type,
                                    input_shape=input_shape,
                                    channels_last=channels_last)
 
@@ -148,4 +149,4 @@ def export_nats_parallel(api, conversion_fn, out_dir, arch_idx_range,
     pool.map(conversion_fn, export_cfgs)
 
     print(f"Converted {arch_idx_range[0]}-{arch_idx_range[1]} architectures "
-          f"in NATS-Bench to {model_type}. Models exported to {out_dir}")
+          f"in NATS-Bench to {model_type}. Models exported to {export_dir}")
