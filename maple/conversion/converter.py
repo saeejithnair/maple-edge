@@ -71,7 +71,7 @@ def generate_configs(api, arch_idx_range, export_dir, model_type, input_shape,
     converted_models_dir = utils.generate_model_outdir(export_dir,
                                                        file_cfg.dirname)
     converted_models_glob_path = f"{converted_models_dir}/" \
-        "*{file_cfg.extension}"
+        f"*.{file_cfg.extension}"
 
     # Calculate list of remaining architecture indices to convert/export.
     # This may not be the same as the user provided range since some models
