@@ -44,13 +44,13 @@ Pipeline execution sequence works as follows:
 """
 
 
-def get_keras_network(config):
+def get_keras_network(config, input_size):
     """Returns the Keras network given a NATS cell architecture index."""
     genotype = converter.get_nats_cell(config)
 
     # Convert NATS cell to Keras network
     keras_net = TinyNetworkKeras(config.C, config.N, genotype,
-                                 config.num_classes)
+                                 config.num_classes, input_size)
     initializer = tf.keras.initializers.RandomUniform(minval=0., maxval=1.,
                                                       seed=27)
 
@@ -186,7 +186,7 @@ def convert_nats_to_tflite(export_config):
     dummy_input = np.float32(np.random.random((1, w, h, 3)))
     dummy_target = np.float32(np.random.random((1, 10)))
 
-    keras_net = get_keras_network(cell_config)
+    keras_net = get_keras_network(cell_config, input_size)
     keras_net.fit(dummy_input, dummy_target)
 
     # Generate path for saving Keras model.
@@ -307,8 +307,8 @@ def convert_nats_ops_to_tflite(export_dir, net_input_shape):
                                     tflite_model_out_path, dummy_input)
 
 
-def convert_nats_to_tflite_parallel(api, export_dir, arch_idx_range, input_shape,
-                                    channels_last=False):
+def convert_nats_to_tflite_parallel(api, export_dir, arch_idx_range,
+                                    input_shape, channels_last=False):
     """Converts NATS network from Keras to Tensorflow Lite. in parallel
     using multiprocessing.
 

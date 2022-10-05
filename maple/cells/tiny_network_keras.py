@@ -186,9 +186,9 @@ class Backbone():
         return self.inputs[block_name]
 
 
-def TinyNetwork(C, N, genotype, num_classes):
+def TinyNetwork(C, N, genotype, num_classes, input_size):
     # Hardcode input shape to 224x224
-    inputs_shape = (224,224,3)
+    inputs_shape = (input_size, input_size,3)
     inputs = Input(shape=inputs_shape)
     stem = BatchNormalization(axis=CHANNEL_AXIS)((Conv2D(filters=C, kernel_size=(3, 3), padding="same", use_bias=False)(inputs)))
     block = stem 
