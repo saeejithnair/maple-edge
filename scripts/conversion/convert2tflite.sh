@@ -32,9 +32,9 @@ while true; do
 		export_dir="${MODEL_EXPORT_DIR}/models_${input_size}"
 
 		echo "Running convert2tflite.py for range ($RANGE_START, $RANGE_END), input: $input_size"
-		python3 convert2tflite.py --range $RANGE_START $RANGE_END \ 
-		--input_size $input_size --export_dir $export_dir \
-		--nats_dir $NATS_DIR
+		python3 convert2tflite.py --range $RANGE_START $RANGE_END \
+			--input_size $input_size --export_dir $export_dir \
+			--nats_dir $NATS_DIR
 	done
 	START=$[$RANGE_END]
 done
