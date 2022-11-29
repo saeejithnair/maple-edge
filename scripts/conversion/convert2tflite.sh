@@ -16,6 +16,8 @@ MODEL_EXPORT_DIR="${4:-$DEFAULT_MODEL_EXPORT_DIR}"
 
 INPUT_SIZES=(16 32 64 128 256 300 384 448 512)
 
+NATS_DIR="/home/${USER}/work/nas/NATS/NATS-tss-v1_0-3ffb9-simple"
+
 while true; do
 	RANGE_END=$[$START + $ITR_PER_BATCH]
 	RANGE_START=$[$START]
@@ -30,7 +32,9 @@ while true; do
 		export_dir="${MODEL_EXPORT_DIR}/models_${input_size}"
 
 		echo "Running convert2tflite.py for range ($RANGE_START, $RANGE_END), input: $input_size"
-		python3 convert2tflite.py --range $RANGE_START $RANGE_END --input_size $input_size --export_dir $export_dir
+		python3 convert2tflite.py --range $RANGE_START $RANGE_END \ 
+		--input_size $input_size --export_dir $export_dir \
+		--nats_dir $NATS_DIR
 	done
 	START=$[$RANGE_END]
 done
@@ -41,7 +45,8 @@ for input_size in ${INPUT_SIZES[@]}; do
 	export_dir="${MODEL_EXPORT_DIR}/models_${input_size}"
 
 	echo "Running convert2tflite.py for range ($START, $END), input: $input_size"
-	python3 convert2tflite.py --range $START $END --input_size $input_size --export_dir $export_dir --convert_ops --convert_backbone
+	python3 convert2tflite.py --range $START $END --input_size $input_size
+		--export_dir $export_dir --nats_dir $NATS_DIR --convert_ops --convert_backbone
 done
 
 echo "Model conversion complete."
