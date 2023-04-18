@@ -1,7 +1,7 @@
 # Requirements for running maple on an Intel server
 # Recommended to use python==3.9
 # conda create --name env_maple python=3.9
-# pip3 install server_requirements.txt
+# pip3 install -r server_requirements.txt
 
 absl-py==1.2.0
 astunparse==1.6.3
