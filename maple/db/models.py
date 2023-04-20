@@ -8,9 +8,9 @@ from datetime import datetime
 class NASBench201ModelBase(SQLModel):
     name: str
     framework: str
-    dataset_version: int
+    dataset_version: float
     model_type: constr(regex="^(cells|ops)$")
-    device: str
+    device: Optional[str] = None
 
 class NASBench201Model(NASBench201ModelBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

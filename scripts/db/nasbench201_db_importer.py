@@ -1,36 +1,29 @@
 import os
-import re
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import asyncio
+from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import Depends
 
-from maple.db.database import database, engine, SessionLocal
-Base = declarative_base()
+from maple.db.database import create_db_and_tables, get_session
+from maple.db.models import NASBench201Model
 
-DATASET_VERSION=1
-class NASBench201Model(Base):
-    __tablename__ = 'NASBench201_Models'
-    id = Column(Integer, primary_key=True)
-    model_name = Column(String)
-    framework = Column(String)
-    dataset_version = Column(Integer)
-    model_type = Column(String)
-    device = Column(String)
-    path = Column(String)
+DATASET_VERSION=1.0
 
-def add_model_to_db(session, model_name, framework, dataset_version, model_type, device, path):
-    new_model = NASBench201Model(
-        model_name=model_name,
+async def create_model(*, session: AsyncSession = Depends(get_session),
+                 model_name: str, framework: str, dataset_version: float,
+                 model_type: str, device: str, path: str):
+    model = NASBench201Model(
+        name=model_name,
         framework=framework,
         dataset_version=dataset_version,
         model_type=model_type,
         device=device,
         path=path
     )
-    session.add(new_model)
-    session.commit()
+    session.add(model)
+    await session.commit()
 
-def import_models(root_dir, session):
+async def import_models(*, session: AsyncSession = Depends(get_session),
+                        root_dir: str):
     for subdir, dirs, files in os.walk(root_dir):
         if 'cells' in subdir or 'ops' in subdir:
             parts = subdir.split('models/')[1].split('/')
@@ -40,25 +33,20 @@ def import_models(root_dir, session):
             if framework == 'trt':
                 device = parts[2]
             else:
-                device = "generic"
+                device = None
 
             for file in files:
                 model_name = file
                 path = os.path.join(subdir, file)
 
-                add_model_to_db(session, model_name, framework, DATASET_VERSION, model_type, device, path)
+                await create_model(session, model_name, framework,
+                                   DATASET_VERSION, model_type, device, path)
 
-if __name__ == '__main__':
+async def main():
     ROOT_DIR = '/pub4/smnair/cheetah/models'
 
-    # NASBench201Model.metadata.create_all(engine)
+    await create_db_and_tables()
+    await import_models(root_dir=ROOT_DIR)
 
-    # session = SessionLocal()
-    session = None
-    import_models(ROOT_DIR, session)
-
-    # models = session.query(NASBench201Model).all()
-    # for model in models:
-    #     print(model.model_name, model.framework, model.dataset_version, model.model_type, model.device, model.path)
-
-    # session.close()
+if __name__ == '__main__':
+    asyncio.run(main())
