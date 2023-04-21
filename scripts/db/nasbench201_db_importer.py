@@ -3,9 +3,8 @@ import asyncio
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import Depends
 
-from maple.db import models
 from maple.db.models import NASBench201Model
-from maple.db.database import create_db_and_tables, get_session
+from maple.db import database as db
 
 DATASET_VERSION=1.0
 
@@ -63,8 +62,9 @@ async def import_models(*, session: AsyncSession,
 async def main():
     ROOT_DIR = '/pub4/smnair/cheetah/models'
 
-    await create_db_and_tables()
-    async with get_session() as session:
+    database = "maple_test_db"
+    async_engine = await db.init_db(database)
+    async with db.get_session(async_engine) as session:
         await import_models(session=session, root_dir=ROOT_DIR)
 
 if __name__ == '__main__':
