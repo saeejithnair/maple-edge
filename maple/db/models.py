@@ -26,12 +26,6 @@ class NASBench201Model(NASBench201ModelBase, table=True):
     # Add a unique constraint for the combination of name, framework, dataset_version, and device
     __table_args__ = (UniqueConstraint("name", "framework", "dataset_version", "device", "input_dim"),)
 
-# class NASBench201ModelCreate(NASBench201ModelBase):
-#     pass
-
-# class NASBench201ModelRead(NASBench201ModelBase):
-#     file: FileResponse
-
 class ProfilingResult(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     inf_latency_mean: float
@@ -41,9 +35,10 @@ class ProfilingResult(SQLModel, table=True):
     performance_counters: List["PerfCounter"] = Relationship(
         back_populates="profiling_result")
 
+    device_name: str = Field(index=True)
+    device_id: int = 0
     experiment_date: datetime = Field(default_factory=datetime.now)
     processor: constr(regex="^(cpu|gpu)$") = Field(index=True)
-
     model_id: int = Field(foreign_key="nasbench201model.id")
     model: NASBench201Model = Relationship(back_populates="profiling_results")
 
