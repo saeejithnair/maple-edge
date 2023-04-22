@@ -3,7 +3,6 @@ from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 from pydantic import constr
 from datetime import datetime
 
-
 class NASBench201ModelBase(SQLModel):
     name: str = Field(index=True)
     framework: str = Field(index=True)
@@ -27,6 +26,11 @@ class NASBench201Model(NASBench201ModelBase, table=True):
     # Add a unique constraint for the combination of name, framework, dataset_version, and device
     __table_args__ = (UniqueConstraint("name", "framework", "dataset_version", "device", "input_dim"),)
 
+# class NASBench201ModelCreate(NASBench201ModelBase):
+#     pass
+
+# class NASBench201ModelRead(NASBench201ModelBase):
+#     file: FileResponse
 
 class ProfilingResult(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
